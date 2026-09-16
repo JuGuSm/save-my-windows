@@ -9,7 +9,7 @@ necessary since GNOME on Wayland now restores window layouts correctly after sus
 adds personal changes on top (see below), under the UUID `save-my-windows@JuGuSm` so it can be installed alongside the
 original without conflicting.
 
-![img.png](img.png)
+![screenshot.png](screenshot.png)
 
 Save My Windows periodically records all open windows along with their monitors and workspaces.
 It lets you restore your window layout whenever Wayland resets or scrambles positions (e.g. after suspend).
