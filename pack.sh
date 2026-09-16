@@ -11,6 +11,9 @@ mkdir -p "$OUT_DIR"
 zip -r "$OUT_ZIP" \
   metadata.json \
   extension.js \
+  icon.png \
+  modules \
+  icons \
   schemas \
   -x "schemas/gschemas.compiled" \
   -x ".git/*" "dist/*" "node_modules/*" ".idea/*" ".vscode/*"
