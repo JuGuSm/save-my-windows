@@ -3,6 +3,7 @@ import GLib from 'gi://GLib';
 
 const CONFIG_DIR = GLib.build_filenamev([GLib.get_user_config_dir(), 'save-my-windows-jugusm']);
 const LAYOUT_FILE = GLib.build_filenamev([CONFIG_DIR, 'layout.json']);
+const DEFAULT_LAYOUT_FILE = GLib.build_filenamev([CONFIG_DIR, 'layout_default.json']);
 const SETTINGS_FILE = GLib.build_filenamev([CONFIG_DIR, 'settings.json']);
 
 function ensureConfigDir() {
@@ -12,10 +13,10 @@ function ensureConfigDir() {
 }
 
 export class LayoutStorage {
-  static async load() {
+  static async load(path = LAYOUT_FILE) {
     return new Promise((resolve) => {
       ensureConfigDir();
-      const file = Gio.File.new_for_path(LAYOUT_FILE);
+      const file = Gio.File.new_for_path(path);
       file.load_contents_async(null, (file, result) => {
         try {
           const [ok, contents] = file.load_contents_finish(result);
@@ -32,11 +33,11 @@ export class LayoutStorage {
     });
   }
 
-  static save(layout) {
+  static save(layout, path = LAYOUT_FILE) {
     try {
       ensureConfigDir();
       const data = JSON.stringify(layout, null, 2);
-      GLib.file_set_contents(LAYOUT_FILE, data);
+      GLib.file_set_contents(path, data);
       return true;
     } catch (e) {
       console.error(`[SaveMyWindows] Failed to save layout: ${String(e)}`);
@@ -44,6 +45,8 @@ export class LayoutStorage {
     }
   }
 }
+
+export {DEFAULT_LAYOUT_FILE};
 
 export class SettingsStorage {
   static load(callback) {
