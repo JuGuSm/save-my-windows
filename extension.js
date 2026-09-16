@@ -15,6 +15,7 @@ export default class SaveMyWindowsExtension {
     this.ui = null;
     this.suspendMonitor = null;
     this.autoRestoreAfterSuspend = false;
+    this.autoSaveEnabled = true;
 
     this.xml = `
       <node>
@@ -82,6 +83,19 @@ export default class SaveMyWindowsExtension {
     }
   }
 
+  setAutoSaveEnabled(enabled) {
+    this.autoSaveEnabled = enabled;
+    this._saveAutoSaveSetting();
+
+    if (enabled) {
+      this._startAutoSave();
+      this.ui.notify('Automatic save enabled.');
+    } else {
+      this._stopAutoSave();
+      this.ui.notify('Automatic save disabled.');
+    }
+  }
+
   setAutoRestoreAfterSuspend(enabled) {
     this.autoRestoreAfterSuspend = enabled;
     this._saveAutoRestoreSetting();
@@ -134,6 +148,22 @@ export default class SaveMyWindowsExtension {
     });
   }
 
+  _loadAutoSaveSetting() {
+    SettingsStorage.load((settings) => {
+      this.autoSaveEnabled = settings.autoSaveEnabled ?? true;
+      if (this.autoSaveEnabled) {
+        this._startAutoSave();
+      }
+    });
+  }
+
+  _saveAutoSaveSetting() {
+    SettingsStorage.load((settings) => {
+      settings.autoSaveEnabled = this.autoSaveEnabled;
+      SettingsStorage.save(settings);
+    });
+  }
+
   enable() {
     const ifaceInfo = Gio.DBusNodeInfo.new_for_xml(this.xml).interfaces[0];
     this.dbusImpl = Gio.DBusExportedObject.wrapJSObject(ifaceInfo, this);
@@ -148,7 +178,7 @@ export default class SaveMyWindowsExtension {
     });
 
     this._loadAutoRestoreSetting();
-    this._startAutoSave();
+    this._loadAutoSaveSetting();
   }
 
   disable() {

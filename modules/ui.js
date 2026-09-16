@@ -34,6 +34,15 @@ export class UIManager {
 
     this.button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
+    const autoSaveItem = new PopupMenu.PopupSwitchMenuItem(
+      'Enable automatic save',
+      this.extension.autoSaveEnabled
+    );
+    autoSaveItem.connect('toggled', (item, state) => {
+      this.extension.setAutoSaveEnabled(state);
+    });
+    this.button.menu.addMenuItem(autoSaveItem);
+
     const autoRestoreItem = new PopupMenu.PopupSwitchMenuItem(
       'Restore automatically after suspend',
       this.extension.autoRestoreAfterSuspend
