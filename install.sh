@@ -27,6 +27,7 @@ mkdir -p "$DEST"
 # Copy only essential files
 cp "$ROOT/metadata.json" "$DEST/"
 cp "$ROOT/extension.js" "$DEST/"
+cp -r "$ROOT/modules" "$DEST/"
 
 # Compile schemas if present
 if [[ -d "$ROOT/schemas" ]]; then
