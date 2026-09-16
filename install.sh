@@ -27,6 +27,9 @@ mkdir -p "$DEST"
 # Copy only essential files
 cp "$ROOT/metadata.json" "$DEST/"
 cp "$ROOT/extension.js" "$DEST/"
+# Root icon.png is the gnome-extensions/extensions.gnome.org listing icon
+# (required filename/location); distinct from icons/app-icon.png used in
+# the panel menu itself.
 cp "$ROOT/icon.png" "$DEST/"
 cp -r "$ROOT/modules" "$DEST/"
 cp -r "$ROOT/icons" "$DEST/"

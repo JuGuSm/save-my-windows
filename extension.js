@@ -1,6 +1,6 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import {LayoutStorage, SettingsStorage, DEFAULT_LAYOUT_FILE} from './modules/storage.js';
+import {LayoutStorage, SettingsStorage} from './modules/storage.js';
 import {WindowCollector, WindowRestorer} from './modules/windows.js';
 import {SuspendMonitor} from './modules/suspend.js';
 import {UIManager} from './modules/ui.js';
@@ -16,7 +16,11 @@ export default class SaveMyWindowsExtension {
     this.suspendMonitor = null;
     this.autoRestoreAfterSuspend = false;
     this.autoSaveEnabled = true;
+    this.autoSaveIntervalMins = AUTO_SAVE_INTERVAL_MINS;
 
+    // Method names below must match the D-Bus interface method names
+    // declared here, so the D-Bus-facing methods stay PascalCase while
+    // everything else in this class uses camelCase.
     this.xml = `
       <node>
         <interface name="org.gnome.Shell.Extensions.SaveMyWindows">
@@ -39,105 +43,72 @@ export default class SaveMyWindowsExtension {
       </node>`;
   }
 
+  // --- D-Bus interface (thin wrappers around the methods below) ---
+
   ListWindows() {
     return JSON.stringify(WindowCollector.collect());
   }
 
   SaveLayout() {
-    const layout = WindowCollector.collect();
-    LayoutStorage.save(layout);
+    this.saveLayout();
     return 'Layout saved';
   }
 
   RestoreLayout() {
-    LayoutStorage.load().then(savedLayout => {
-      if (!savedLayout) {
-        this.ui.notify('No saved layout found');
-        return;
-      }
-
-      WindowRestorer.restore(savedLayout)
-        .then(count => {
-          this.ui.notify(`Restored ${count} windows`);
-        })
-        .catch(error => {
-          console.error(`[${EXTENSION_NAME}] Restore failed: ${error}`);
-          this.ui.notify(`Restore failed: ${error.message}`);
-        });
-    });
-
+    this.restoreLayout();
     return 'Restore started';
   }
 
   SaveDefaultLayout() {
-    const layout = WindowCollector.collect();
-    LayoutStorage.save(layout, DEFAULT_LAYOUT_FILE);
+    this.saveDefaultLayout();
     return 'Default layout saved';
   }
 
   RestoreDefaultLayout() {
-    LayoutStorage.load(DEFAULT_LAYOUT_FILE).then(savedLayout => {
-      if (!savedLayout) {
-        this.ui.notify('No default layout found');
-        return;
-      }
-
-      WindowRestorer.restore(savedLayout)
-        .then(count => {
-          this.ui.notify(`Restored ${count} windows from default layout`);
-        })
-        .catch(error => {
-          console.error(`[${EXTENSION_NAME}] Restore default failed: ${error}`);
-          this.ui.notify(`Restore default failed: ${error.message}`);
-        });
-    });
-
+    this.restoreDefaultLayout();
     return 'Restore default started';
   }
 
+  // --- Save/restore, shared by the D-Bus interface, the panel menu and
+  // the post-suspend hook ---
+
   saveLayout() {
-    this.SaveLayout();
+    LayoutStorage.save(WindowCollector.collect());
+  }
+
+  saveDefaultLayout() {
+    LayoutStorage.saveDefault(WindowCollector.collect());
   }
 
   async restoreLayout() {
+    await this._restore(() => LayoutStorage.load(), 'No saved layout found', '');
+  }
+
+  async restoreDefaultLayout() {
+    await this._restore(() => LayoutStorage.loadDefault(), 'No default layout found', ' from default layout');
+  }
+
+  async _restore(loadLayout, notFoundMessage, restoredSuffix) {
     try {
-      const savedLayout = await LayoutStorage.load();
+      const savedLayout = await loadLayout();
       if (!savedLayout) {
-        this.ui.notify('No saved layout found');
+        this.ui.notify(notFoundMessage);
         return;
       }
 
       const count = await WindowRestorer.restore(savedLayout);
-      this.ui.notify(`Restored ${count} windows`);
+      this.ui.notify(`Restored ${count} windows${restoredSuffix}`);
     } catch (error) {
       console.error(`[${EXTENSION_NAME}] Restore failed: ${error}`);
       this.ui.notify(`Restore failed: ${error.message}`);
     }
   }
 
-  saveDefaultLayout() {
-    this.SaveDefaultLayout();
-  }
-
-  async restoreDefaultLayout() {
-    try {
-      const savedLayout = await LayoutStorage.load(DEFAULT_LAYOUT_FILE);
-      if (!savedLayout) {
-        this.ui.notify('No default layout found');
-        return;
-      }
-
-      const count = await WindowRestorer.restore(savedLayout);
-      this.ui.notify(`Restored ${count} windows from default layout`);
-    } catch (error) {
-      console.error(`[${EXTENSION_NAME}] Restore default failed: ${error}`);
-      this.ui.notify(`Restore default failed: ${error.message}`);
-    }
-  }
+  // --- Settings toggles, called from the panel menu ---
 
   setAutoSaveEnabled(enabled) {
     this.autoSaveEnabled = enabled;
-    this._saveAutoSaveSetting();
+    this._updateSetting('autoSaveEnabled', enabled);
 
     if (enabled) {
       this._startAutoSave();
@@ -150,7 +121,7 @@ export default class SaveMyWindowsExtension {
 
   setAutoRestoreAfterSuspend(enabled) {
     this.autoRestoreAfterSuspend = enabled;
-    this._saveAutoRestoreSetting();
+    this._updateSetting('autoRestoreAfterSuspend', enabled);
 
     if (enabled) {
       this.suspendMonitor.start();
@@ -159,6 +130,13 @@ export default class SaveMyWindowsExtension {
       this.suspendMonitor.stop();
       this.ui.notify('Auto-restore after suspend disabled.');
     }
+  }
+
+  _updateSetting(key, value) {
+    SettingsStorage.load((settings) => {
+      settings[key] = value;
+      SettingsStorage.save(settings);
+    });
   }
 
   _startAutoSave() {
@@ -170,7 +148,7 @@ export default class SaveMyWindowsExtension {
       GLib.PRIORITY_DEFAULT,
       AUTO_SAVE_INTERVAL_MINS * 60,
       () => {
-        this.SaveLayout();
+        this.saveLayout();
         console.log(`[${EXTENSION_NAME}] Auto-saved layout`);
         return GLib.SOURCE_CONTINUE;
       }
@@ -193,26 +171,12 @@ export default class SaveMyWindowsExtension {
     });
   }
 
-  _saveAutoRestoreSetting() {
-    SettingsStorage.load((settings) => {
-      settings.autoRestoreAfterSuspend = this.autoRestoreAfterSuspend;
-      SettingsStorage.save(settings);
-    });
-  }
-
   _loadAutoSaveSetting() {
     SettingsStorage.load((settings) => {
       this.autoSaveEnabled = settings.autoSaveEnabled ?? true;
       if (this.autoSaveEnabled) {
         this._startAutoSave();
       }
-    });
-  }
-
-  _saveAutoSaveSetting() {
-    SettingsStorage.load((settings) => {
-      settings.autoSaveEnabled = this.autoSaveEnabled;
-      SettingsStorage.save(settings);
     });
   }
 

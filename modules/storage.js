@@ -44,9 +44,28 @@ export class LayoutStorage {
       return false;
     }
   }
-}
 
-export {DEFAULT_LAYOUT_FILE};
+  static loadDefault() {
+    return this.load(DEFAULT_LAYOUT_FILE);
+  }
+
+  static saveDefault(layout) {
+    return this.save(layout, DEFAULT_LAYOUT_FILE);
+  }
+
+  // Used by "Edit Default Layout" so the file always exists before it's
+  // opened in the user's text editor.
+  static ensureDefaultExists() {
+    ensureConfigDir();
+    if (!GLib.file_test(DEFAULT_LAYOUT_FILE, GLib.FileTest.EXISTS)) {
+      GLib.file_set_contents(DEFAULT_LAYOUT_FILE, '[]');
+    }
+  }
+
+  static getDefaultLayoutPath() {
+    return DEFAULT_LAYOUT_FILE;
+  }
+}
 
 export class SettingsStorage {
   static load(callback) {
