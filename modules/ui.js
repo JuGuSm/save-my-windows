@@ -6,6 +6,34 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {DEFAULT_LAYOUT_FILE} from './storage.js';
 
+const MODULE_PATH = import.meta.url.replace('file://', '');
+const EXTENSION_DIR = GLib.path_get_dirname(GLib.path_get_dirname(MODULE_PATH));
+const ICONS_DIR = GLib.build_filenamev([EXTENSION_DIR, 'icons']);
+
+function iconPath(iconName) {
+  return GLib.build_filenamev([ICONS_DIR, iconName]);
+}
+
+function loadIcon(iconName, size = 16) {
+  return new St.Icon({
+    gicon: Gio.icon_new_for_string(iconPath(iconName)),
+    icon_size: size,
+  });
+}
+
+function menuItemWithIcon(label, iconName, onActivate) {
+  const item = new PopupMenu.PopupImageMenuItem(label, Gio.icon_new_for_string(iconPath(iconName)));
+  item.connect('activate', onActivate);
+  return item;
+}
+
+function switchItemWithIcon(label, iconName, initialState, onToggled) {
+  const item = new PopupMenu.PopupSwitchMenuItem(label, initialState);
+  item.insert_child_at_index(loadIcon(iconName), 0);
+  item.connect('toggled', onToggled);
+  return item;
+}
+
 export class UIManager {
   constructor(extension) {
     this.extension = extension;
@@ -14,38 +42,29 @@ export class UIManager {
 
   createPanelMenu() {
     this.button = new PanelMenu.Button(0.0, 'Save My Windows', false);
+    this.button.add_child(loadIcon('app-icon.png', 20));
 
-    const icon = new St.Icon({
-      icon_name: 'document-save-symbolic',
-      style_class: 'system-status-icon',
-    });
-    this.button.add_child(icon);
-
-    const saveItem = new PopupMenu.PopupMenuItem('Save Current Layout');
-    saveItem.connect('activate', () => {
+    const saveItem = menuItemWithIcon('Save Current Layout', 'save-current.png', () => {
       this.extension.saveLayout();
       this.notify('Layout saved.');
     });
     this.button.menu.addMenuItem(saveItem);
 
-    const saveDefaultItem = new PopupMenu.PopupMenuItem('Save Current Layout as Default');
-    saveDefaultItem.connect('activate', () => {
-      this.extension.saveDefaultLayout();
-      this.notify('Default layout saved.');
-    });
-    this.button.menu.addMenuItem(saveDefaultItem);
-
-    this.button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-
-    const restoreItem = new PopupMenu.PopupMenuItem('Restore Last Layout');
-    restoreItem.connect('activate', () => {
+    const restoreItem = menuItemWithIcon('Restore Last Layout', 'restore-current.png', () => {
       this.extension.restoreLayout();
       this.notify('Layout restored.');
     });
     this.button.menu.addMenuItem(restoreItem);
 
-    const restoreDefaultItem = new PopupMenu.PopupMenuItem('Restore Default Layout');
-    restoreDefaultItem.connect('activate', () => {
+    this.button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+    const saveDefaultItem = menuItemWithIcon('Save Current Layout as Default', 'save-default.png', () => {
+      this.extension.saveDefaultLayout();
+      this.notify('Default layout saved.');
+    });
+    this.button.menu.addMenuItem(saveDefaultItem);
+
+    const restoreDefaultItem = menuItemWithIcon('Restore Default Layout', 'restore-default.png', () => {
       this.extension.restoreDefaultLayout();
       this.notify('Default layout restored.');
     });
@@ -53,31 +72,28 @@ export class UIManager {
 
     this.button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-    const editDefaultItem = new PopupMenu.PopupMenuItem('Edit Default Layout');
-    editDefaultItem.connect('activate', () => {
-      this._openDefaultLayoutInEditor();
-    });
-    this.button.menu.addMenuItem(editDefaultItem);
+    const autoSaveItem = switchItemWithIcon(
+      'Save Automatically (5m)',
+      'save-auto.png',
+      this.extension.autoSaveEnabled,
+      (item, state) => this.extension.setAutoSaveEnabled(state)
+    );
+    this.button.menu.addMenuItem(autoSaveItem);
+
+    const autoRestoreItem = switchItemWithIcon(
+      'Restore Automatically (after suspend)',
+      'restore-auto.png',
+      this.extension.autoRestoreAfterSuspend,
+      (item, state) => this.extension.setAutoRestoreAfterSuspend(state)
+    );
+    this.button.menu.addMenuItem(autoRestoreItem);
 
     this.button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-    const autoSaveItem = new PopupMenu.PopupSwitchMenuItem(
-      'Enable automatic save',
-      this.extension.autoSaveEnabled
-    );
-    autoSaveItem.connect('toggled', (item, state) => {
-      this.extension.setAutoSaveEnabled(state);
+    const editDefaultItem = menuItemWithIcon('Edit Default Layout', 'edit-default.png', () => {
+      this._openDefaultLayoutInEditor();
     });
-    this.button.menu.addMenuItem(autoSaveItem);
-
-    const autoRestoreItem = new PopupMenu.PopupSwitchMenuItem(
-      'Restore automatically after suspend',
-      this.extension.autoRestoreAfterSuspend
-    );
-    autoRestoreItem.connect('toggled', (item, state) => {
-      this.extension.setAutoRestoreAfterSuspend(state);
-    });
-    this.button.menu.addMenuItem(autoRestoreItem);
+    this.button.menu.addMenuItem(editDefaultItem);
 
     Main.panel.addToStatusArea('save-my-windows-jugusm', this.button);
   }
