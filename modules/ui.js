@@ -43,7 +43,7 @@ export class UIManager {
     });
     this.button.menu.addMenuItem(autoRestoreItem);
 
-    Main.panel.addToStatusArea('save-my-windows', this.button);
+    Main.panel.addToStatusArea('save-my-windows-jugusm', this.button);
   }
 
   notify(message) {

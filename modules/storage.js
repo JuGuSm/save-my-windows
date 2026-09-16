@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-const CONFIG_DIR = GLib.build_filenamev([GLib.get_user_config_dir(), 'save-my-windows']);
+const CONFIG_DIR = GLib.build_filenamev([GLib.get_user_config_dir(), 'save-my-windows-jugusm']);
 const LAYOUT_FILE = GLib.build_filenamev([CONFIG_DIR, 'layout.json']);
 const SETTINGS_FILE = GLib.build_filenamev([CONFIG_DIR, 'settings.json']);
 
