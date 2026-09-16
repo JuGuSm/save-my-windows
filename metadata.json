@@ -1,7 +1,7 @@
 {
-  "uuid": "save-my-windows@JuGuSm",
-  "name": "Save My Windows (JuGuSm fork)",
-  "description": "Personal fork of Save My Windows (originally by lukastymo). Periodically records all open windows along with their monitors and workspaces, and lets you restore your window layout whenever Wayland resets or scrambles positions (e.g. after suspend). Adds regex-based window title matching for restoration.",
+  "uuid": "deja-vu@JuGuSm",
+  "name": "Déjà Vu",
+  "description": "Restores your window layout — position, workspace, monitor — after Wayland scrambles it (e.g. after suspend). Includes regex-based window title matching, a separate default layout, and a configurable auto-save interval. Originally based on Save My Windows by lukastymo.",
   "version": 6,
   "shell-version": [
     "45",

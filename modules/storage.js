@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-const CONFIG_DIR = GLib.build_filenamev([GLib.get_user_config_dir(), 'save-my-windows-jugusm']);
+const CONFIG_DIR = GLib.build_filenamev([GLib.get_user_config_dir(), 'deja-vu']);
 const LAYOUT_FILE = GLib.build_filenamev([CONFIG_DIR, 'layout.json']);
 const DEFAULT_LAYOUT_FILE = GLib.build_filenamev([CONFIG_DIR, 'layout_default.json']);
 const SETTINGS_FILE = GLib.build_filenamev([CONFIG_DIR, 'settings.json']);
@@ -40,7 +40,7 @@ export class LayoutStorage {
       GLib.file_set_contents(path, data);
       return true;
     } catch (e) {
-      console.error(`[SaveMyWindows] Failed to save layout: ${String(e)}`);
+      console.error(`[DejaVu] Failed to save layout: ${String(e)}`);
       return false;
     }
   }
@@ -92,7 +92,7 @@ export class SettingsStorage {
       const data = JSON.stringify(settings, null, 2);
       GLib.file_set_contents(SETTINGS_FILE, data);
     } catch (e) {
-      console.error(`[SaveMyWindows] Failed to save settings: ${String(e)}`);
+      console.error(`[DejaVu] Failed to save settings: ${String(e)}`);
     }
   }
 }

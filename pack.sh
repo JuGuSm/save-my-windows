@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-UUID="save-my-windows@JuGuSm"
+UUID="deja-vu@JuGuSm"
 OUT_DIR="dist"
 OUT_ZIP="$OUT_DIR/${UUID}.shell-extension.zip"
 
