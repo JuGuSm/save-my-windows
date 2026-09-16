@@ -1,5 +1,21 @@
 import Meta from 'gi://Meta';
 
+const REGEX_PREFIX = 're:';
+
+function titleMatches(savedTitle, actualTitle) {
+  if (typeof savedTitle !== 'string' || !savedTitle.startsWith(REGEX_PREFIX)) {
+    return savedTitle === actualTitle;
+  }
+
+  const pattern = savedTitle.slice(REGEX_PREFIX.length);
+  try {
+    return new RegExp(pattern).test(actualTitle);
+  } catch (e) {
+    console.error(`[SaveMyWindows] Invalid regex pattern in layout title "${savedTitle}": ${String(e)}`);
+    return false;
+  }
+}
+
 export class WindowCollector {
   static collect() {
     const windows = [];
@@ -32,7 +48,7 @@ export class WindowCollector {
 
       const match = savedLayout.find(s =>
         s.wm_class === (w.get_wm_class() || '') &&
-        s.title === w.get_title()
+        titleMatches(s.title, w.get_title())
       );
       if (match) {
         currentWindows.push({window: w, layout: match});
