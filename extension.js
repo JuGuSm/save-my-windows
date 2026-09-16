@@ -1,6 +1,6 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import {LayoutStorage, SettingsStorage} from './modules/storage.js';
+import {LayoutStorage, SettingsStorage, DEFAULT_LAYOUT_FILE} from './modules/storage.js';
 import {WindowCollector, WindowRestorer} from './modules/windows.js';
 import {SuspendMonitor} from './modules/suspend.js';
 import {UIManager} from './modules/ui.js';
@@ -27,6 +27,12 @@ export default class SaveMyWindowsExtension {
             <arg type="s" name="result" direction="out"/>
           </method>
           <method name="RestoreLayout">
+            <arg type="s" name="result" direction="out"/>
+          </method>
+          <method name="SaveDefaultLayout">
+            <arg type="s" name="result" direction="out"/>
+          </method>
+          <method name="RestoreDefaultLayout">
             <arg type="s" name="result" direction="out"/>
           </method>
         </interface>
@@ -63,6 +69,32 @@ export default class SaveMyWindowsExtension {
     return 'Restore started';
   }
 
+  SaveDefaultLayout() {
+    const layout = WindowCollector.collect();
+    LayoutStorage.save(layout, DEFAULT_LAYOUT_FILE);
+    return 'Default layout saved';
+  }
+
+  RestoreDefaultLayout() {
+    LayoutStorage.load(DEFAULT_LAYOUT_FILE).then(savedLayout => {
+      if (!savedLayout) {
+        this.ui.notify('No default layout found');
+        return;
+      }
+
+      WindowRestorer.restore(savedLayout)
+        .then(count => {
+          this.ui.notify(`Restored ${count} windows from default layout`);
+        })
+        .catch(error => {
+          console.error(`[${EXTENSION_NAME}] Restore default failed: ${error}`);
+          this.ui.notify(`Restore default failed: ${error.message}`);
+        });
+    });
+
+    return 'Restore default started';
+  }
+
   saveLayout() {
     this.SaveLayout();
   }
@@ -80,6 +112,26 @@ export default class SaveMyWindowsExtension {
     } catch (error) {
       console.error(`[${EXTENSION_NAME}] Restore failed: ${error}`);
       this.ui.notify(`Restore failed: ${error.message}`);
+    }
+  }
+
+  saveDefaultLayout() {
+    this.SaveDefaultLayout();
+  }
+
+  async restoreDefaultLayout() {
+    try {
+      const savedLayout = await LayoutStorage.load(DEFAULT_LAYOUT_FILE);
+      if (!savedLayout) {
+        this.ui.notify('No default layout found');
+        return;
+      }
+
+      const count = await WindowRestorer.restore(savedLayout);
+      this.ui.notify(`Restored ${count} windows from default layout`);
+    } catch (error) {
+      console.error(`[${EXTENSION_NAME}] Restore default failed: ${error}`);
+      this.ui.notify(`Restore default failed: ${error.message}`);
     }
   }
 

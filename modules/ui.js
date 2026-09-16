@@ -1,7 +1,10 @@
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import {DEFAULT_LAYOUT_FILE} from './storage.js';
 
 export class UIManager {
   constructor(extension) {
@@ -18,19 +21,43 @@ export class UIManager {
     });
     this.button.add_child(icon);
 
-    const saveItem = new PopupMenu.PopupMenuItem('Save Layout');
+    const saveItem = new PopupMenu.PopupMenuItem('Save Current Layout');
     saveItem.connect('activate', () => {
       this.extension.saveLayout();
       this.notify('Layout saved.');
     });
     this.button.menu.addMenuItem(saveItem);
 
-    const restoreItem = new PopupMenu.PopupMenuItem('Restore Layout');
+    const saveDefaultItem = new PopupMenu.PopupMenuItem('Save Current Layout as Default');
+    saveDefaultItem.connect('activate', () => {
+      this.extension.saveDefaultLayout();
+      this.notify('Default layout saved.');
+    });
+    this.button.menu.addMenuItem(saveDefaultItem);
+
+    this.button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+    const restoreItem = new PopupMenu.PopupMenuItem('Restore Last Layout');
     restoreItem.connect('activate', () => {
       this.extension.restoreLayout();
       this.notify('Layout restored.');
     });
     this.button.menu.addMenuItem(restoreItem);
+
+    const restoreDefaultItem = new PopupMenu.PopupMenuItem('Restore Default Layout');
+    restoreDefaultItem.connect('activate', () => {
+      this.extension.restoreDefaultLayout();
+      this.notify('Default layout restored.');
+    });
+    this.button.menu.addMenuItem(restoreDefaultItem);
+
+    this.button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+    const editDefaultItem = new PopupMenu.PopupMenuItem('Edit Default Layout');
+    editDefaultItem.connect('activate', () => {
+      this._openDefaultLayoutInEditor();
+    });
+    this.button.menu.addMenuItem(editDefaultItem);
 
     this.button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
@@ -57,6 +84,20 @@ export class UIManager {
 
   notify(message) {
     Main.notify('Save My Windows', message);
+  }
+
+  _openDefaultLayoutInEditor() {
+    try {
+      if (!GLib.file_test(DEFAULT_LAYOUT_FILE, GLib.FileTest.EXISTS)) {
+        GLib.file_set_contents(DEFAULT_LAYOUT_FILE, '[]');
+      }
+
+      const file = Gio.File.new_for_path(DEFAULT_LAYOUT_FILE);
+      Gio.AppInfo.launch_default_for_uri(file.get_uri(), null);
+    } catch (e) {
+      console.error(`[SaveMyWindows] Failed to open default layout for editing: ${String(e)}`);
+      this.notify('Failed to open default layout file.');
+    }
   }
 
   destroy() {
