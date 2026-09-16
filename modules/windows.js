@@ -1,5 +1,9 @@
 import Meta from 'gi://Meta';
 
+// Saved titles prefixed with "re:" are treated as JS regex patterns instead
+// of exact strings; see README "Window title pattern matching". Kept as a
+// free function rather than a WindowCollector method since it's a pure
+// string-matching helper with no window/GNOME API dependency.
 const REGEX_PREFIX = 're:';
 
 function titleMatches(savedTitle, actualTitle) {
@@ -40,7 +44,7 @@ export class WindowCollector {
     return windows;
   }
 
-  static findMatchingWindow(savedLayout) {
+  static findMatchingWindows(savedLayout) {
     const currentWindows = [];
     for (const actor of global.get_window_actors()) {
       const w = actor.meta_window;
@@ -98,7 +102,7 @@ export class WindowRestorer {
       throw new Error('Display system not ready');
     }
 
-    const windowsToRestore = WindowCollector.findMatchingWindow(savedLayout);
+    const windowsToRestore = WindowCollector.findMatchingWindows(savedLayout);
     let restoredCount = 0;
 
     for (const {window, layout} of windowsToRestore) {
