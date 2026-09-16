@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Release script for Save My Windows GNOME extension
+# Release script for Déjà Vu GNOME extension
 # Creates a git tag with version from metadata.json
 
 set -euo pipefail

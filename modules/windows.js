@@ -15,7 +15,7 @@ function titleMatches(savedTitle, actualTitle) {
   try {
     return new RegExp(pattern).test(actualTitle);
   } catch (e) {
-    console.error(`[SaveMyWindows] Invalid regex pattern in layout title "${savedTitle}": ${String(e)}`);
+    console.error(`[DejaVu] Invalid regex pattern in layout title "${savedTitle}": ${String(e)}`);
     return false;
   }
 }
@@ -67,7 +67,7 @@ export class WindowRestorer {
     try {
       return !!(global.workspace_manager && global.display);
     } catch (e) {
-      console.error(`[SaveMyWindows] Error checking display system: ${String(e)}`);
+      console.error(`[DejaVu] Error checking display system: ${String(e)}`);
       return false;
     }
   }
@@ -92,7 +92,7 @@ export class WindowRestorer {
 
       return true;
     } catch (e) {
-      console.error(`[SaveMyWindows] Error restoring window ${window.get_title()}: ${String(e)}`);
+      console.error(`[DejaVu] Error restoring window ${window.get_title()}: ${String(e)}`);
       return false;
     }
   }

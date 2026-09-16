@@ -30,7 +30,7 @@ export class UIManager {
   }
 
   createPanelMenu() {
-    this.button = new PanelMenu.Button(0.0, 'Save My Windows', false);
+    this.button = new PanelMenu.Button(0.0, 'Déjà Vu', false);
     this.button.add_child(loadIcon('app-icon.png', 20));
 
     this._addActionItem('Save Current Layout', 'save-current.png', () => {
@@ -77,7 +77,7 @@ export class UIManager {
       this._openDefaultLayoutInEditor();
     });
 
-    Main.panel.addToStatusArea('save-my-windows-jugusm', this.button);
+    Main.panel.addToStatusArea('deja-vu', this.button);
   }
 
   _addActionItem(label, iconFileName, onActivate) {
@@ -98,7 +98,7 @@ export class UIManager {
   }
 
   notify(message) {
-    Main.notify('Save My Windows', message);
+    Main.notify('Déjà Vu', message);
   }
 
   _openDefaultLayoutInEditor() {
@@ -107,7 +107,7 @@ export class UIManager {
       const file = Gio.File.new_for_path(LayoutStorage.getDefaultLayoutPath());
       Gio.AppInfo.launch_default_for_uri(file.get_uri(), null);
     } catch (e) {
-      console.error(`[SaveMyWindows] Failed to open default layout for editing: ${String(e)}`);
+      console.error(`[DejaVu] Failed to open default layout for editing: ${String(e)}`);
       this.notify('Failed to open default layout file.');
     }
   }

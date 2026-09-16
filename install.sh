@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-UUID="save-my-windows@JuGuSm"
+UUID="deja-vu@JuGuSm"
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 USER_DIR="$HOME/.local/share/gnome-shell/extensions/$UUID"

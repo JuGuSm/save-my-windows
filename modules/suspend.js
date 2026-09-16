@@ -30,7 +30,7 @@ export class SuspendMonitor {
 
       this.proxy.init(null);
     } catch (e) {
-      console.error(`[SaveMyWindows] Failed to start suspend monitor: ${String(e)}`);
+      console.error(`[DejaVu] Failed to start suspend monitor: ${String(e)}`);
     }
   }
 

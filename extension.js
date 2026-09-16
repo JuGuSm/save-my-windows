@@ -5,10 +5,10 @@ import {WindowCollector, WindowRestorer} from './modules/windows.js';
 import {SuspendMonitor} from './modules/suspend.js';
 import {UIManager} from './modules/ui.js';
 
-const EXTENSION_NAME = "SaveMyWindows";
+const EXTENSION_NAME = "DejaVu";
 const AUTO_SAVE_INTERVAL_MINS = 5;
 
-export default class SaveMyWindowsExtension {
+export default class DejaVuExtension {
   constructor() {
     this.dbusImpl = null;
     this.autoSaveTimeoutId = null;
@@ -23,7 +23,7 @@ export default class SaveMyWindowsExtension {
     // everything else in this class uses camelCase.
     this.xml = `
       <node>
-        <interface name="org.gnome.Shell.Extensions.SaveMyWindows">
+        <interface name="org.gnome.Shell.Extensions.DejaVu">
           <method name="ListWindows">
             <arg type="s" name="result" direction="out"/>
           </method>
